@@ -8,7 +8,8 @@ variables:
 stages:
   - build
   - docker
-  - deploy
+  - deploy_maven
+  - deploy_to_test
   - release
 
 build:
@@ -27,9 +28,9 @@ build:
   except:
     - /release-.*$/
 
-deploy:
+deploy-maven:
   image: maven:3-jdk-8
-  stage: deploy
+  stage: deploy_maven
   script:
     - echo "$MAVEN_CREDENTIALS" > /root/.m2/settings.xml
     - mvn deploy -DskipTests
@@ -39,6 +40,19 @@ deploy:
     paths:
       - ./**/*.jar
     expire_in:  1 hour
+    
+deploy-to-test:
+  image: maven:3-jdk-8
+  stage: deploy_to_test
+  before_script:
+	- mkdir -p ~/.ssh
+	- echo -e "$TESTSERVER_SSH" > ~/.ssh/id_rsa
+	- chmod 600 ~/.ssh/id_rsa
+	- '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+  script:
+    - ssh "$TESTSERVER_USER"@s"$TESTSERVER_HOSTNAME "cd ~/streampipes-cd && docker-compose pull && docker-compose up -d"
+  only:
+    - dev
 
 docker-jvm:
    image: docker:17.06.0-ce
