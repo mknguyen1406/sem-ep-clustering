@@ -61,7 +61,7 @@ docker-jvm:
    script:
      - export MVN_VERSION=$(cat ./target/mvn_version)
      - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $REGISTRY_HOST
-     - docker build --pull -t $IMAGE_NAME:latest $IMAGE_NAME:$MVN_VERSION .
+     - docker build --pull -t $IMAGE_NAME:latest -t $IMAGE_NAME:$MVN_VERSION .
      - docker push $IMAGE_NAME:$MVN_VERSION
    only:
      - dev
