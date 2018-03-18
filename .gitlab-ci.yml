@@ -50,7 +50,7 @@ deploy-to-test:
     - chmod 600 ~/.ssh/id_rsa
     - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
   script:
-    - ssh "$TESTSERVER_USER"@s"$TESTSERVER_HOSTNAME "cd ~/streampipes-cd && docker-compose pull && docker-compose up -d"
+    - ssh "$TESTSERVER_USER"@"$TESTSERVER_HOSTNAME "cd ~/streampipes-cd && docker-compose pull && docker-compose up -d"
   only:
     - dev
 
