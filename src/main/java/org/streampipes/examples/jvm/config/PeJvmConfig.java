@@ -142,6 +142,7 @@ public enum PeJvmConfig implements PeConfig {
 	}
 
 	public Integer getNginxPort() {
+	    
 		return config.getInteger(NGINX_PORT);
 	}
 
