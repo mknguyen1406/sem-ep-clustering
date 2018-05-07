@@ -132,11 +132,31 @@
                     <enableSshAgent>true</enableSshAgent>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>1.6</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <gpgArguments>
+                        <arg>--pinentry-mode</arg>
+                        <arg>loopback</arg>
+                    </gpgArguments>
+                </configuration>
+            </plugin>
         </plugins>
         <finalName>streampipes-examples-jvm</finalName>
 
     </build>
-    
+
     <scm>
         <developerConnection>scm:git:ssh://git@ipe-wim-gitlab.fzi.de:2222/streampipes/pe-examples-jvm.git
         </developerConnection>
