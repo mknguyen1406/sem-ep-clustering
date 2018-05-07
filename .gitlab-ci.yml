@@ -7,6 +7,7 @@ variables:
 
 stages:
   - build
+  - github
   - docker
   - deploy
   - release
@@ -26,6 +27,20 @@ build:
     expire_in:  1 hour
   except:
     - /release-.*$/
+
+github:
+  image: maven:3-jdk-8
+  stage: github
+  script:
+    - git config --global user.email 'zehnder@fzi.de'
+    - git config --global user.name 'zehnder'
+    - git checkout $CI_COMMIT_REF_NAME
+    - git pull
+    - git remote add github https://$GITHUB_TOKEN:x-oauth-basic@github.com/streampipes/pe-examples-jvm.git
+    - git push github $CI_COMMIT_REF_NAME
+  only:
+    - dev
+    - master
 
 deploy maven artifact:
   image: maven:3-jdk-8
