@@ -59,6 +59,6 @@ public class ProjectionController extends StandaloneEventProcessingDeclarer<Proj
     ProjectionParameters staticParam = new ProjectionParameters(
             graph, outputKeys);
 
-    return new ConfiguredEventProcessor<>(staticParam, Projection::new);
+    return new ConfiguredEventProcessor<>(staticParam, () -> new Projection(staticParam));
   }
 }

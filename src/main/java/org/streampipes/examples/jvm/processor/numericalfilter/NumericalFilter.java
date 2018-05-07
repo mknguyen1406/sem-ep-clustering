@@ -26,6 +26,10 @@ public class NumericalFilter extends StandaloneEventProcessorEngine<NumericalFil
 
   private NumericalFilterParameters params;
 
+  public NumericalFilter(NumericalFilterParameters params) {
+    super(params);
+  }
+
   @Override
   public void onInvocation(NumericalFilterParameters numericalFilterParameters, DataProcessorInvocation dataProcessorInvocation) {
     this.params = numericalFilterParameters;

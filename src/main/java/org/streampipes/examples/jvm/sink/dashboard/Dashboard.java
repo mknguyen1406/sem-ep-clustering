@@ -28,7 +28,7 @@ import org.streampipes.wrapper.runtime.EventSink;
 
 import java.util.Map;
 
-public class Dashboard implements EventSink<DashboardParameters> {
+public class Dashboard extends EventSink<DashboardParameters> {
 
     private ActiveMQPublisher publisher;
     private JsonDataFormatDefinition jsonDataFormatDefinition;
@@ -44,9 +44,9 @@ public class Dashboard implements EventSink<DashboardParameters> {
     private String pipelineId;
 
 
-    public Dashboard() {
+    public Dashboard(DashboardParameters params) {
+        super(params);
         this.jsonDataFormatDefinition = new JsonDataFormatDefinition();
-
     }
 
     @Override

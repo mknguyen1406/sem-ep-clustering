@@ -23,12 +23,13 @@ import org.streampipes.wrapper.runtime.EventSink;
 
 import java.util.Map;
 
-public class KafkaPublisher implements EventSink<KafkaParameters> {
+public class KafkaPublisher extends EventSink<KafkaParameters> {
 
 	private SpKafkaProducer producer;
 	private JsonDataFormatDefinition dataFormatDefinition;
 
-	public KafkaPublisher() {
+	public KafkaPublisher(KafkaParameters params) {
+		super(params);
 		this.dataFormatDefinition = new JsonDataFormatDefinition();
 	}
 
