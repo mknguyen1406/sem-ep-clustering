@@ -183,6 +183,13 @@
         </developer>
     </developers>
 
+    <repositories>
+        <repository>
+            <id>deployment</id>
+            <name>Internal Releases</name>
+            <url>https://laus.fzi.de/nexus/content/repositories/public/</url>
+        </repository>
+    </repositories>
 
     <distributionManagement>
         <repository>
