@@ -112,7 +112,9 @@ finish release:
   stage: release
   script:
     - echo "$MAVEN_CREDENTIALS" > /root/.m2/settings.xml
+    - echo "$GPG_PRIVATE_KEY" | gpg --batch --import --passphrase "$GPG_PASSPHRASE"
     - git remote set-url origin $GIT_REPO_ORIGIN/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME.git
+    - git remote add github https://$GITHUB_TOKEN:x-oauth-basic@github.com/streampipes/pe-examples-jvm.git
     - eval $(ssh-agent -s)
     - ssh-add <(echo "$SSH")
     - mkdir ~/.ssh
@@ -126,6 +128,12 @@ finish release:
     - mvn -B jgitflow:release-finish $MAVEN_CLI_OPTS
     - git push origin --all
     - git push origin --tags
+    - git checkout master
+    - export MVN_VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -v '\[')
+    - git push github master
+    - git push github version-$MVN_VERSION
+    - git checkout dev
+    - git push github dev
   when: manual
   except:
     - master
