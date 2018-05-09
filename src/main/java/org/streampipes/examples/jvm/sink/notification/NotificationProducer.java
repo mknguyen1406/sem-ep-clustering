@@ -27,7 +27,7 @@ import org.streampipes.wrapper.runtime.EventSink;
 import java.util.Date;
 import java.util.Map;
 
-public class NotificationProducer implements EventSink<NotificationParameters> {
+public class NotificationProducer extends EventSink<NotificationParameters> {
 
   private String title;
   private String content;
@@ -36,7 +36,8 @@ public class NotificationProducer implements EventSink<NotificationParameters> {
   private Gson gson;
 
 
-  public NotificationProducer() {
+  public NotificationProducer(NotificationParameters params) {
+    super(params);
 
   }
 

@@ -28,6 +28,10 @@ public class Projection extends StandaloneEventProcessorEngine<ProjectionParamet
 
   private List<String> outputKeys;
 
+  public Projection(ProjectionParameters params) {
+    super(params);
+  }
+
   @Override
   public void onInvocation(ProjectionParameters projectionParameters, DataProcessorInvocation dataProcessorInvocation) {
     this.outputKeys = projectionParameters.getOutputKeys();

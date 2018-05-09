@@ -69,7 +69,7 @@ public class CouchDbController  extends StandaloneEventSinkDeclarer<CouchDbParam
 
     CouchDbParameters params = new CouchDbParameters(graph, hostname, port, dbName, user, password);
 
-    return new ConfiguredEventSink<>(params, CouchDb::new);
+    return new ConfiguredEventSink<>(params, () -> new CouchDb(params));
   }
 
 }

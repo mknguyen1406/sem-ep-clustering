@@ -73,6 +73,6 @@ public class TextFilterController extends StandaloneEventProcessingDeclarer<Text
             StringOperator.valueOf(operation),
             filterProperty);
 
-    return new ConfiguredEventProcessor<>(staticParam, TextFilter::new);
+    return new ConfiguredEventProcessor<>(staticParam, () -> new TextFilter(staticParam));
   }
 }

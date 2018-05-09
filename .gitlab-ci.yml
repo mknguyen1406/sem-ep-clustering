@@ -7,6 +7,7 @@ variables:
 
 stages:
   - build
+  - github
   - docker
   - deploy
   - release
@@ -15,8 +16,9 @@ build:
   image: maven:3-jdk-8
   stage: build
   script:
+    - echo "$GPG_PRIVATE_KEY" | gpg --batch --import --passphrase "$GPG_PASSPHRASE"
     - echo "$MAVEN_CREDENTIALS" > /root/.m2/settings.xml
-    - mvn clean package -DskipTests
+    - mvn clean package gpg:sign -DskipTests
     - export MVN_VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -v '\[')
     - "echo $MVN_VERSION >> ./target/mvn_version"
   artifacts:
@@ -27,10 +29,25 @@ build:
   except:
     - /release-.*$/
 
-deploy:
+github:
+  image: maven:3-jdk-8
+  stage: github
+  script:
+    - git config --global user.email 'zehnder@fzi.de'
+    - git config --global user.name 'zehnder'
+    - git checkout $CI_COMMIT_REF_NAME
+    - git pull
+    - git remote add github https://$GITHUB_TOKEN:x-oauth-basic@github.com/streampipes/pe-examples-jvm.git
+    - git push github $CI_COMMIT_REF_NAME
+  only:
+    - dev
+    - master
+
+deploy maven artifact:
   image: maven:3-jdk-8
   stage: deploy
   script:
+    - echo "$GPG_PRIVATE_KEY" | gpg --batch --import --passphrase "$GPG_PASSPHRASE"
     - echo "$MAVEN_CREDENTIALS" > /root/.m2/settings.xml
     - mvn deploy -DskipTests
   only:
@@ -39,6 +56,19 @@ deploy:
     paths:
       - ./**/*.jar
     expire_in:  1 hour
+    
+#deploy to test:
+#  image: maven:3-jdk-8
+#  stage: deploy
+#  before_script:
+#    - mkdir -p ~/.ssh
+#    - echo -e "$TESTSERVER_SSH" > ~/.ssh/id_rsa
+#    - chmod 600 ~/.ssh/id_rsa
+#    - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+#  script:
+#    - ssh "$TESTSERVER_USER"@"$TESTSERVER_HOSTNAME" "cd ~/streampipes-cd && docker-compose pull pe-examples-jvm && docker-compose up -d"
+#  only:
+#    - dev
 
 docker-jvm:
    image: docker:17.06.0-ce
@@ -48,8 +78,9 @@ docker-jvm:
    script:
      - export MVN_VERSION=$(cat ./target/mvn_version)
      - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $REGISTRY_HOST
-     - docker build --pull -t $IMAGE_NAME:$MVN_VERSION .
+     - docker build --pull -t $IMAGE_NAME:latest -t $IMAGE_NAME:$MVN_VERSION .
      - docker push $IMAGE_NAME:$MVN_VERSION
+     - docker push $IMAGE_NAME:latest
    only:
      - dev
 
@@ -80,7 +111,9 @@ finish release:
   stage: release
   script:
     - echo "$MAVEN_CREDENTIALS" > /root/.m2/settings.xml
+    - echo "$GPG_PRIVATE_KEY" | gpg --batch --import --passphrase "$GPG_PASSPHRASE"
     - git remote set-url origin $GIT_REPO_ORIGIN/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME.git
+    - git remote add github https://$GITHUB_TOKEN:x-oauth-basic@github.com/streampipes/pe-examples-jvm.git
     - eval $(ssh-agent -s)
     - ssh-add <(echo "$SSH")
     - mkdir ~/.ssh
@@ -94,6 +127,12 @@ finish release:
     - mvn -B jgitflow:release-finish $MAVEN_CLI_OPTS
     - git push origin --all
     - git push origin --tags
+    - git checkout master
+    - export MVN_VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -v '\[')
+    - git push github master
+    - git push github version-$MVN_VERSION
+    - git checkout dev
+    - git push github dev
   when: manual
   except:
     - master

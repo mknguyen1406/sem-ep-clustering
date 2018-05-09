@@ -26,6 +26,10 @@ public class TextFilter extends StandaloneEventProcessorEngine<TextFilterParamet
 
   private TextFilterParameters params;
 
+  public TextFilter(TextFilterParameters params) {
+    super(params);
+  }
+
   @Override
   public void onInvocation(TextFilterParameters textFilterParameters, DataProcessorInvocation dataProcessorInvocation) {
     this.params = textFilterParameters;

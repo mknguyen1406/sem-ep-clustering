@@ -38,7 +38,7 @@ public class NotificationController extends StandaloneEventSinkDeclarer<Notifica
 	public DataSinkDescription declareModel() {
 		return DataSinkBuilder.create("notification", "Notification", "Displays a notification in the UI panel")
 						.category(DataSinkType.NOTIFICATION)
-						.iconUrl(PeJvmConfig.getIconUrl("notification_icon.png"))
+						.iconUrl(PeJvmConfig.getIconUrl("notification_icon"))
 						.requiredPropertyStream1(EpRequirements.anyProperty())
 						.supportedFormats(SupportedFormats.jsonFormat())
 						.supportedProtocols(SupportedProtocols.kafka())
@@ -57,7 +57,7 @@ public class NotificationController extends StandaloneEventSinkDeclarer<Notifica
 
 		NotificationParameters params = new NotificationParameters(graph, title, content);
 
-		return new ConfiguredEventSink<>(params, NotificationProducer::new);
+		return new ConfiguredEventSink<>(params, () -> new NotificationProducer(params));
 	}
 
 }

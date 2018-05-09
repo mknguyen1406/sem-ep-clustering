@@ -72,7 +72,7 @@ public enum PeJvmConfig implements PeConfig {
 	
 	static {
 		serverUrl = PeJvmConfig.INSTANCE.getHost() + ":" + PeJvmConfig.INSTANCE.getPort();
-		iconBaseUrl = PeJvmConfig.INSTANCE.getIconHost() + ":" + PeJvmConfig.INSTANCE.getIconPort() +"/img/pe_icons";
+		iconBaseUrl = PeJvmConfig.INSTANCE.getIconHost() + ":" + PeJvmConfig.INSTANCE.getIconPort() +"/assets/img/pe_icons";
 	}
 
 	public static final String getIconUrl(String pictureName) {
@@ -142,6 +142,7 @@ public enum PeJvmConfig implements PeConfig {
 	}
 
 	public Integer getNginxPort() {
+	    
 		return config.getInteger(NGINX_PORT);
 	}
 

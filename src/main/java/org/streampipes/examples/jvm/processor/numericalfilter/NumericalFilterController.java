@@ -82,6 +82,6 @@ public class NumericalFilterController extends StandaloneEventProcessingDeclarer
             (operation)
             , filterProperty);
 
-    return new ConfiguredEventProcessor<>(staticParam, NumericalFilter::new);
+    return new ConfiguredEventProcessor<>(staticParam, () -> new NumericalFilter(staticParam));
   }
 }

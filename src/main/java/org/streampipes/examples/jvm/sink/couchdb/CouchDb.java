@@ -23,9 +23,13 @@ import org.streampipes.wrapper.runtime.EventSink;
 
 import java.util.Map;
 
-public class CouchDb implements EventSink<CouchDbParameters> {
+public class CouchDb extends EventSink<CouchDbParameters> {
 
   private CouchDbClient couchDbClient;
+
+  public CouchDb(CouchDbParameters params) {
+    super(params);
+  }
 
   @Override
   public void bind(CouchDbParameters parameters) throws SpRuntimeException {
