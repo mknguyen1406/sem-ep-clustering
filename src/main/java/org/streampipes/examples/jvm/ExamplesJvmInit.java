@@ -20,6 +20,8 @@ import org.streampipes.container.init.DeclarersSingleton;
 import org.streampipes.container.standalone.init.StandaloneModelSubmitter;
 import org.streampipes.dataformat.json.JsonDataFormatFactory;
 import org.streampipes.examples.jvm.config.PeJvmConfig;
+import org.streampipes.examples.jvm.processor.birch.BIRCHController;
+import org.streampipes.examples.jvm.processor.denStream.DenStreamController;
 import org.streampipes.examples.jvm.processor.numericalfilter.NumericalFilterController;
 import org.streampipes.examples.jvm.processor.projection.ProjectionController;
 import org.streampipes.examples.jvm.processor.textfilter.TextFilterController;
@@ -35,6 +37,8 @@ public class ExamplesJvmInit extends StandaloneModelSubmitter {
     DeclarersSingleton
             .getInstance()
             .add(new ProjectionController())
+            .add(new BIRCHController())
+            .add(new DenStreamController())
             .add(new NumericalFilterController())
             .add(new TextFilterController())
             .add(new NotificationController())

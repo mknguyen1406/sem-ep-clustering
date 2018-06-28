@@ -44,12 +44,12 @@ public enum PeJvmConfig implements PeConfig {
 	public final static String serverUrl;
 	public final static String iconBaseUrl;
 
-	private final static String SERVICE_ID = "pe/org.streampipes.pe.jvm.examples";
+	private final static String SERVICE_ID = "pe/org.streampipes.pe.jvm.examples1";
 	private final static String SERVICE_NAME = "service_name";
 
 	PeJvmConfig() {
 		config = SpConfig.getSpConfig(SERVICE_ID);
-		config.register(HOST, "pe-examples-jvm", "Hostname for the pe esper");
+		config.register(HOST, "localhost", "Hostname for the pe esper");
 		config.register(PORT, 8090, "Port for the pe esper");
 
 		config.register(ICON_HOST, "backend", "Hostname for the icon host");
@@ -66,7 +66,7 @@ public enum PeJvmConfig implements PeConfig {
 		config.register(JMS_HOST, "tcp://activemq", "Hostname for pe actions service for active mq");
 		config.register(JMS_PORT, 61616, "Port for pe actions service for active mq");
 
-		config.register(SERVICE_NAME, "Examples JVM", "The name of the service");
+		config.register(SERVICE_NAME, "Clustering", "The name of the service");
 
 	}
 	
