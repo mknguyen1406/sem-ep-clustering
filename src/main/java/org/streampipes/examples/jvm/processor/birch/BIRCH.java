@@ -21,6 +21,7 @@ import org.streampipes.examples.jvm.processor.birch.KMeans.input.ClusterWithMean
 import org.streampipes.examples.jvm.processor.birch.KMeans.input.DoubleArray;
 import org.streampipes.examples.jvm.processor.birch.cftree.CFEntry;
 import org.streampipes.examples.jvm.processor.birch.cftree.CFTree;
+import org.streampipes.examples.jvm.processor.birch.net.sourceforge.sizeof.SizeOf;
 import org.streampipes.model.graph.DataProcessorInvocation;
 import org.streampipes.wrapper.routing.SpOutputCollector;
 import org.streampipes.wrapper.standalone.engine.StandaloneEventProcessorEngine;
@@ -182,5 +183,19 @@ public class BIRCH extends StandaloneEventProcessorEngine<BIRCHParameters> {
             sum += Math.pow(vector1.data[i] - vector2.data[i], 2);
         }
         return Math.sqrt(sum);
+    }
+
+
+
+    public long computeMemorySize(CFTree t) {
+
+        long memSize = 0;
+        try {
+            memSize = SizeOf.iterativeSizeOf(t);
+        }
+        catch(Exception e) {
+            System.err.println("#################### ERROR WHEN COMPUTING MEMORY SIZE: " + e);
+        }
+        return memSize;
     }
 }

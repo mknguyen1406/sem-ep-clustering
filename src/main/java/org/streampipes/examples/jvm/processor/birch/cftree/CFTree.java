@@ -72,11 +72,6 @@ public class CFTree {
 	 * if true, the tree is automatically rebuilt every time the memory limit is reached
 	 */
 	private boolean automaticRebuild = false;
-
-	/**
-	 * if true, the algorithm is temporally stopped to calculate macroclusters
-	 */
-	private boolean stopped = false;
 	
 	/**
 	 * the memory limit used when automatic rebuilding is active
@@ -468,8 +463,6 @@ public class CFTree {
 	 */
 	public void finishedInsertingData() {
 
-		stopped=true;
-
 		CFNode l = leafListStart.getNextLeaf(); // the first leaf is dummy!
 		
 		int id = 0;
@@ -502,8 +495,6 @@ public class CFTree {
 			}
 			l = l.getNextLeaf();
 		}
-
-		stopped=false;
 	}
 	
 	/**
