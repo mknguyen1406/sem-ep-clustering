@@ -47,7 +47,7 @@ public class AlgoKMeans {
      * @param k the parameter
      * @return a list of clusters (some of them may be empty)
      */
-    public List<ClusterWithMean> runAlgorithm(List<DoubleArray> instances, int k)  {
+    public List<ClusterWithMean> runAlgorithm(List<DoubleArray> instances, int k, List<DoubleArray> seeds)  {
         // record the start time
         startTimestamp =  System.currentTimeMillis();
         // reset the number of iterations
@@ -112,8 +112,9 @@ public class AlgoKMeans {
             k = instances.size();
         }
 
+        //Run algorithm
         applyAlgorithm(k, instances, minValue, maxValue,
-                vectorsSize);
+                vectorsSize, seeds);
 
         // record end time
         endTimestamp =  System.currentTimeMillis();
@@ -132,9 +133,9 @@ public class AlgoKMeans {
      */
     void applyAlgorithm(int k,
                         List<DoubleArray> vectors, double minValue, double maxValue,
-                        int vectorsSize) {
+                        int vectorsSize, List<DoubleArray> seeds) {
         // apply kmeans
-        clusters = applyKMeans(k, vectors, minValue, maxValue, vectorsSize);
+        clusters = applyKMeans(k, vectors, minValue, maxValue, vectorsSize, seeds);
     }
 
     /**
@@ -147,7 +148,7 @@ public class AlgoKMeans {
      */
     List<ClusterWithMean> applyKMeans(int k,
                                       List<DoubleArray> vectors, double minValue, double maxValue,
-                                      int vectorsSize) {
+                                      int vectorsSize, List<DoubleArray> seeds) {
         List<ClusterWithMean> newClusters = new ArrayList<ClusterWithMean>();
 
         // SPECIAL CASE: If only one vector
@@ -160,13 +161,47 @@ public class AlgoKMeans {
             return newClusters;
         }
 
-        // (1) Randomly generate k empty clusters with a random mean (cluster
-        // center)
-        for(int i=0; i< k; i++){
-            DoubleArray meanVector = generateRandomVector(minValue, maxValue, vectorsSize);
-            ClusterWithMean cluster = new ClusterWithMean(vectorsSize);
-            cluster.setMean(meanVector);
-            newClusters.add(cluster);
+
+        if (seeds.size()!=0 && seeds.size()==k) {
+            // (1.a) Generate k empty clusters with macrocluster center as seeds
+            for (int i = 0; i < k; i++) {
+                ClusterWithMean cluster = new ClusterWithMean(vectorsSize);
+                cluster.setMean(seeds.get(i));
+                newClusters.add(cluster);
+            }
+        } else {
+            // (1.b) Randomly generate k empty clusters with a random mean (cluster
+            // center)
+            for (int i = 0; i < k; i++) {
+                //DoubleArray meanVector = generateRandomVector(minValue, maxValue, vectorsSize);
+                ClusterWithMean cluster = new ClusterWithMean(vectorsSize);
+
+                if (i==0) {
+                    DoubleArray meanVector = vectors.get(0);
+                    cluster.setMean(meanVector);
+                    newClusters.add(cluster);
+                } else {
+
+                    double maxDistance = 0;
+                    DoubleArray farestPoint = vectors.get(1);
+
+                    for (int j = i;j<vectors.size();j++) {
+                        DoubleArray p = vectors.get(j);
+
+                        for (ClusterWithMean c:newClusters) {
+                            DoubleArray center = c.getmean();
+                            double d = calculateDistance(center, p);
+                            if (d > maxDistance) {
+                                maxDistance = d;
+                                farestPoint = p;
+                            }
+                        }
+                    }
+
+                    cluster.setMean(farestPoint);
+                    newClusters.add(cluster);
+                }
+            }
         }
 
         // (2) Repeat the two next steps until the assignment hasn't changed

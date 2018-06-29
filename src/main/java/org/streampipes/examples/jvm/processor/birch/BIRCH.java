@@ -21,7 +21,6 @@ import org.streampipes.examples.jvm.processor.birch.KMeans.input.ClusterWithMean
 import org.streampipes.examples.jvm.processor.birch.KMeans.input.DoubleArray;
 import org.streampipes.examples.jvm.processor.birch.cftree.CFEntry;
 import org.streampipes.examples.jvm.processor.birch.cftree.CFTree;
-import org.streampipes.examples.jvm.processor.birch.net.sourceforge.sizeof.SizeOf;
 import org.streampipes.model.graph.DataProcessorInvocation;
 import org.streampipes.wrapper.routing.SpOutputCollector;
 import org.streampipes.wrapper.standalone.engine.StandaloneEventProcessorEngine;
@@ -38,13 +37,14 @@ public class BIRCH extends StandaloneEventProcessorEngine<BIRCHParameters> {
     private int maxNodeEntries;
     private float distTreshold;
     CFTree birchTree;
-    List<ClusterWithMean> macroclusters = null;
+    List<ClusterWithMean> macroclusters;
 
     public BIRCH(BIRCHParameters params) {
         super(params);
         maxNodeEntries = params.getMaxNodeEntries();
         distTreshold = params.getDistTreshold();
         birchTree = new CFTree(maxNodeEntries, distTreshold);
+        macroclusters = new ArrayList<>();
     }
 
     @Override
@@ -125,6 +125,7 @@ public class BIRCH extends StandaloneEventProcessorEngine<BIRCHParameters> {
 
         List<CFEntry> microclusters = birchTree.getLeafEntries();  //Get all microclusters in the leafs of the birch tree
         List<DoubleArray> instances = new ArrayList<>(); //Creates ArrayList with instances for kMeans
+        List<DoubleArray> seeds = new ArrayList<>(); //Creates ArrayList with seeds for kMeans
 
         for (CFEntry e : microclusters) {
             DoubleArray instance = new DoubleArray(e.getCenter());  //Adds each microcluster center to instances list for kMeans
@@ -132,7 +133,13 @@ public class BIRCH extends StandaloneEventProcessorEngine<BIRCHParameters> {
         }
 
         AlgoKMeans km = new AlgoKMeans();
-        macroclusters = km.runAlgorithm(instances, 2);
+
+        if (macroclusters.size()!=0){
+            for (ClusterWithMean c : macroclusters)
+                seeds.add(c.getmean());
+        }
+
+        macroclusters = km.runAlgorithm(instances, 2, seeds); //Run kMeans with macrocluster center as seeds
 
         int count = 1;
         for (ClusterWithMean c : macroclusters) {
@@ -183,19 +190,5 @@ public class BIRCH extends StandaloneEventProcessorEngine<BIRCHParameters> {
             sum += Math.pow(vector1.data[i] - vector2.data[i], 2);
         }
         return Math.sqrt(sum);
-    }
-
-
-
-    public long computeMemorySize(CFTree t) {
-
-        long memSize = 0;
-        try {
-            memSize = SizeOf.iterativeSizeOf(t);
-        }
-        catch(Exception e) {
-            System.err.println("#################### ERROR WHEN COMPUTING MEMORY SIZE: " + e);
-        }
-        return memSize;
     }
 }
