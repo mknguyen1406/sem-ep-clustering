@@ -33,19 +33,17 @@ public class BIRCH extends StandaloneEventProcessorEngine<BIRCHParameters> {
 
     private BIRCHParameters params;
 
-    private int maxNodeEntries;
-    private float distTreshold;
     private int numClusters;
 
     private int count;                              //Number of processed data evnts
     private int macroIterations;                    //Number of iterations until offline phase
-    public CFTree cfTree;                           //CF tree
-    public List<ClusterWithMean> macroclusters;     //List of macroclusters
+    private CFTree cfTree;                           //CF tree
+    private List<ClusterWithMean> macroclusters;     //List of macroclusters
 
     public BIRCH(BIRCHParameters params) {
         super(params);
-        maxNodeEntries = params.getMaxNodeEntries();
-        distTreshold = params.getDistTreshold();
+        int maxNodeEntries = params.getMaxNodeEntries();
+        float distTreshold = params.getDistTreshold();
         numClusters = params.getNumClusters();
         cfTree = new CFTree(maxNodeEntries, distTreshold);
         macroclusters = new ArrayList<>();
@@ -91,8 +89,7 @@ public class BIRCH extends StandaloneEventProcessorEngine<BIRCHParameters> {
     }
 
     /**
-     * Only for testing purposes!
-     *
+     * Only for testing
      * @param in
      */
     public void onEvent(Map<String, Object> in) {
@@ -129,7 +126,7 @@ public class BIRCH extends StandaloneEventProcessorEngine<BIRCHParameters> {
      * Is called after a specified amount of iterations
      * @param k
      */
-    void calculateMacroclusters(int k) {
+    private void calculateMacroclusters(int k) {
 
         //birch_tree.finishedInsertingData();
 
@@ -169,7 +166,7 @@ public class BIRCH extends StandaloneEventProcessorEngine<BIRCHParameters> {
      * @param x
      * @return id of closest macrocluster
      */
-    int getClosestMacroclusterId(double[] x) {
+    private int getClosestMacroclusterId(double[] x) {
         int id = 0;
         double minDist = Double.MAX_VALUE;
 
@@ -194,7 +191,7 @@ public class BIRCH extends StandaloneEventProcessorEngine<BIRCHParameters> {
      * @param vector2
      * @return distance between two data points
      */
-    double calculateDistance(DoubleArray vector1, DoubleArray vector2) {
+    private double calculateDistance(DoubleArray vector1, DoubleArray vector2) {
         double sum = 0;
         for (int i = 0; i < vector1.data.length; i++) {
             sum += Math.pow(vector1.data[i] - vector2.data[i], 2);
