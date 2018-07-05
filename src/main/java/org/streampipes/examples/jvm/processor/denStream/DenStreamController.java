@@ -70,11 +70,7 @@ public class DenStreamController extends StandaloneEventProcessingDeclarer<DenSt
         Integer initN = extractor.singleValueParameter("initN", Integer.class);
 
         String firstProperty = extractor.mappingPropertyValue("x");
-//        String firstProperty = SepaUtils.getMappingPropertyName(sepa,
-//                "x", true);
         String secondProperty = extractor.mappingPropertyValue("y");
-//                SepaUtils.getMappingPropertyName(sepa,
-//                "y", true);
 
         DenStreamParameters staticParam = new DenStreamParameters(sepa,
                 epsilonMicro,

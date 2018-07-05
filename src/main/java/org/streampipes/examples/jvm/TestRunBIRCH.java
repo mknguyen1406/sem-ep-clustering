@@ -19,15 +19,16 @@ public class TestRunBIRCH {
 
         int maxNodeEntries = 3;
         float distTreshold = 5;
+        int numClusters = 2;
         int memoryLimit = 1000; // in MB
         int memoryLimitPeriodicCheck = 10000;  // verify memory usage after every 10000 inserted instances
         String firstProperty = "x";
         String secondProperty = "y";
 
-        BIRCHParameters staticParam = new BIRCHParameters(maxNodeEntries, distTreshold, firstProperty, secondProperty);
+        BIRCHParameters staticParam = new BIRCHParameters(maxNodeEntries, distTreshold, numClusters,firstProperty, secondProperty);
 
         BIRCH birchObject = new BIRCH(staticParam);
-        CFTree birchTree = birchObject.getBirchTree();
+        CFTree birchTree = birchObject.getCfTree();
         // comment the following three lines, if you do not want auto rebuild based on memory usage constraints
         // if auto-rebuild is not active, you need to set distThreshold by hand
         birchTree.setAutomaticRebuild(false);

@@ -33,14 +33,9 @@ public class BIRCHController extends StandaloneEventProcessingDeclarer<BIRCHPara
 
     @Override
     public DataProcessorDescription declareModel() {
-        return ProcessingElementBuilder.create("birch", "BIRCH", "BIRCH Description")
+        return ProcessingElementBuilder.create("birch", "BIRCH", "This algorithm allows for two-dimensional clustering of a data stream.")
                 .category(DataProcessorType.ENRICH)
                 .iconUrl(PeJvmConfig.getIconUrl("Numerical_Filter_Icon_HQ"))
-//                .requiredStream(StreamRequirementsBuilder.create().requiredPropertyWithUnaryMapping(EpRequirements
-//                        .numberReq(), Labels.from("x", "Specifies the first property that should be clustered", ""), PropertyScope.NONE).build())
-//                .requiredStream(StreamRequirementsBuilder.create().requiredPropertyWithUnaryMapping(EpRequirements
-//                        .numberReq(), Labels.from("y", "Specifies the second property that should be clustered", ""), PropertyScope.NONE).build())
-
                 .requiredStream(
                         StreamRequirementsBuilder.create()
                                 .requiredPropertyWithUnaryMapping(
@@ -53,10 +48,10 @@ public class BIRCHController extends StandaloneEventProcessingDeclarer<BIRCHPara
                                         PropertyScope.NONE)
                                 .build())
                 .outputStrategy(OutputStrategies.append(
-                        EpProperties.integerEp(Labels.empty(),"cluster","http://cluster.de")
-                ))
-                .requiredFloatParameter("maxNodeEntries","Maximum Node Entries", "Specifies the maximum number of entries a node can comprise..")
-                .requiredFloatParameter("distTreshold","Radius Threshold", "Specifies the maximum radius for a leaf node.")
+                        EpProperties.integerEp(Labels.empty(), "cluster", "http://www.cluster.de")))
+                .requiredIntegerParameter("maxNodeEntries", "Maximum Node Entries", "Specifies the maximum number of entries a node can comprise..")
+                .requiredFloatParameter("distTreshold", "Radius Threshold", "Specifies the maximum radius for a leaf node.")
+                .requiredIntegerParameter("numCluster", "Number of clusters", "Specifies the number of clusters.")
                 .supportedProtocols(SupportedProtocols.kafka())
                 .supportedFormats(SupportedFormats.jsonFormat())
                 .build();
@@ -68,16 +63,14 @@ public class BIRCHController extends StandaloneEventProcessingDeclarer<BIRCHPara
             (DataProcessorInvocation sepa) {
         ProcessingElementParameterExtractor extractor = ProcessingElementParameterExtractor.from(sepa);
 
-        Integer maxNodeEntries= extractor.singleValueParameter("maxNodeEntries", Integer.class);
+        Integer maxNodeEntries = extractor.singleValueParameter("maxNodeEntries", Integer.class);
         Float distTreshold = extractor.singleValueParameter("distTreshold", Float.class);
+        Integer numClusters = extractor.singleValueParameter("numCluster", Integer.class);
 
+        String firstProperty = extractor.mappingPropertyValue("x");
+        String secondProperty = extractor.mappingPropertyValue("y");
 
-        String firstProperty = SepaUtils.getMappingPropertyName(sepa,
-                "x", true);
-        String secondProperty = SepaUtils.getMappingPropertyName(sepa,
-                "y", true);
-
-        BIRCHParameters staticParam = new BIRCHParameters(sepa, maxNodeEntries, distTreshold, firstProperty, secondProperty);
+        BIRCHParameters staticParam = new BIRCHParameters(sepa, maxNodeEntries, distTreshold, numClusters, firstProperty, secondProperty);
 
         return new ConfiguredEventProcessor<>(staticParam, () -> new BIRCH(staticParam));
     }

@@ -21,13 +21,15 @@ import org.streampipes.wrapper.params.binding.EventProcessorBindingParams;
 
 public class BIRCHParameters extends EventProcessorBindingParams {
 
-    private int maxNodeEntries;
-    private float distTreshold;
-    private String firstProperty;
-    private String secondProperty;
+    private int maxNodeEntries;     //This is the branching factor B
+    private float distTreshold;     //This is the leaf threshold R
+    private int numClusters;        //This is the number of macroclusters k
+    private String firstProperty;   //This is the first data stream property
+    private String secondProperty;  //This is the second data stream property
 
-    public BIRCHParameters(DataProcessorInvocation graph, Integer maxNodeEntries, Float distTreshold, String firstProperty, String secondProperty) {
+    public BIRCHParameters(DataProcessorInvocation graph, Integer maxNodeEntries, Float distTreshold, Integer numClusters,String firstProperty, String secondProperty) {
         super(graph);
+        this.numClusters = numClusters;
         this.maxNodeEntries = maxNodeEntries;
         this.distTreshold= distTreshold;
         this.firstProperty = firstProperty;
@@ -41,9 +43,10 @@ public class BIRCHParameters extends EventProcessorBindingParams {
      * @param firstProperty
      * @param secondProperty
      */
-    public BIRCHParameters(Integer maxNodeEntries, Float distTreshold, String firstProperty, String secondProperty) {
+    public BIRCHParameters(Integer maxNodeEntries, Float distTreshold, Integer numClusters, String firstProperty, String secondProperty) {
         this.maxNodeEntries = maxNodeEntries;
         this.distTreshold= distTreshold;
+        this.numClusters = numClusters;
         this.firstProperty = firstProperty;
         this.secondProperty = secondProperty;
     }
@@ -55,6 +58,8 @@ public class BIRCHParameters extends EventProcessorBindingParams {
     public float getDistTreshold() {
         return distTreshold;
     }
+
+    public int getNumClusters() { return numClusters; }
 
     public  String getFirstProperty(){ return firstProperty; }
 

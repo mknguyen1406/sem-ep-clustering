@@ -33,18 +33,23 @@ public class BIRCH extends StandaloneEventProcessorEngine<BIRCHParameters> {
 
     private BIRCHParameters params;
 
-    private int count;
     private int maxNodeEntries;
     private float distTreshold;
-    CFTree birchTree;
-    List<ClusterWithMean> macroclusters;
+    private int numClusters;
+
+    private int count;                              //Number of processed data evnts
+    private int macroIterations;                    //Number of iterations until offline phase
+    public CFTree cfTree;                           //CF tree
+    public List<ClusterWithMean> macroclusters;     //List of macroclusters
 
     public BIRCH(BIRCHParameters params) {
         super(params);
         maxNodeEntries = params.getMaxNodeEntries();
         distTreshold = params.getDistTreshold();
-        birchTree = new CFTree(maxNodeEntries, distTreshold);
+        numClusters = params.getNumClusters();
+        cfTree = new CFTree(maxNodeEntries, distTreshold);
         macroclusters = new ArrayList<>();
+        macroIterations = 1000;
     }
 
     @Override
@@ -63,15 +68,19 @@ public class BIRCH extends StandaloneEventProcessorEngine<BIRCHParameters> {
 
         // Read one instace at a time from the dataset
         // training birch, one instance at a time...
-        boolean inserted = birchTree.insertEntry(x);
+        boolean inserted = cfTree.insertEntry(x);
         if (!inserted) {
             System.err.println("ERROR: NOT INSERTED!");
             System.exit(1);
         }
 
-        //TODO Hier muss noch das Makrocluster berechnet werden, zu dem der Datenpunkt hinzugefügt wird. Die Id wird dann appended
 
-        in.put("cluster", 1);
+        if ((count % macroIterations) == 0) { //Recalculate macroclusters after a specified amount of iterations
+            calculateMacroclusters(numClusters);
+            System.out.println("Point: "+x[0]+ ", "+x[1]+" Closest MC: "+getClosestMacroclusterId(x));
+        }
+
+        in.put("cluster", getClosestMacroclusterId(x));
 
         out.onEvent(in);
     }
@@ -91,39 +100,40 @@ public class BIRCH extends StandaloneEventProcessorEngine<BIRCHParameters> {
 
         double[] x = new double[2];
 
-        x[0] = Double.parseDouble(in.get("x").toString());
-        x[1] = Double.parseDouble(in.get("y").toString());
+        x[0] = Double.parseDouble(String.valueOf(in.get(params.getFirstProperty())));
+        x[1] = Double.parseDouble(String.valueOf(in.get(params.getSecondProperty())));
 
         // Read one instace at a time from the dataset
         // training birch, one instance at a time...
-        boolean inserted = birchTree.insertEntry(x);
+        boolean inserted = cfTree.insertEntry(x);
         if (!inserted) {
             System.err.println("ERROR: NOT INSERTED!");
             System.exit(1);
         }
 
 
-        if ((count % 1000) == 0) { //Recalculate macroclusters after a specified amount of iterations
-            calculateMacroclusters();
+        if ((count % macroIterations) == 0) { //Recalculate macroclusters after a specified amount of iterations
+            calculateMacroclusters(numClusters);
             System.out.println("Point: "+x[0]+ ", "+x[1]+" Closest MC: "+getClosestMacroclusterId(x));
         }
 
         in.put("cluster", getClosestMacroclusterId(x));
     }
 
-    public CFTree getBirchTree() {
-        return birchTree;
+    public CFTree getCfTree() {
+        return cfTree;
     }
 
     /**
      * Calculates macrocluster based on current microclusters
      * Is called after a specified amount of iterations
+     * @param k
      */
-    void calculateMacroclusters() {
+    void calculateMacroclusters(int k) {
 
         //birch_tree.finishedInsertingData();
 
-        List<CFEntry> microclusters = birchTree.getLeafEntries();  //Get all microclusters in the leafs of the birch tree
+        List<CFEntry> microclusters = cfTree.getLeafEntries();  //Get all microclusters in the leafs of the birch tree
         List<DoubleArray> instances = new ArrayList<>(); //Creates ArrayList with instances for kMeans
         List<DoubleArray> seeds = new ArrayList<>(); //Creates ArrayList with seeds for kMeans
 
@@ -139,7 +149,7 @@ public class BIRCH extends StandaloneEventProcessorEngine<BIRCHParameters> {
                 seeds.add(c.getmean());
         }
 
-        macroclusters = km.runAlgorithm(instances, 2, seeds); //Run kMeans with macrocluster center as seeds
+        macroclusters = km.runAlgorithm(instances, k, seeds); //Run kMeans with macrocluster center as seeds
 
         int count = 1;
         for (ClusterWithMean c : macroclusters) {
