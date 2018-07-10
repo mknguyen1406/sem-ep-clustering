@@ -20,6 +20,8 @@
 # Gradle:
 .idea/gradle.xml
 .idea/libraries
+.xlsx
+.csv
 
 # Mongo Explorer plugin:
 .idea/mongoSettings.xml
