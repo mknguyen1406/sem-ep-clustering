@@ -21,6 +21,8 @@ import org.streampipes.examples.jvm.processor.birch.KMeans.input.ClusterWithMean
 import org.streampipes.examples.jvm.processor.birch.KMeans.input.DoubleArray;
 import org.streampipes.examples.jvm.processor.birch.cftree.CFEntry;
 import org.streampipes.examples.jvm.processor.birch.cftree.CFTree;
+import org.streampipes.examples.jvm.processor.birch.memoryCalculator.Measurer;
+import org.streampipes.examples.jvm.testData.Evaluation;
 import org.streampipes.model.graph.DataProcessorInvocation;
 import org.streampipes.wrapper.routing.SpOutputCollector;
 import org.streampipes.wrapper.standalone.engine.StandaloneEventProcessorEngine;
@@ -34,20 +36,26 @@ public class BIRCH extends StandaloneEventProcessorEngine<BIRCHParameters> {
     private BIRCHParameters params;
 
     private int numClusters;
+    int maxNodeEntries;
+    float distTreshold;
 
     private int count;                              //Number of processed data evnts
     private int macroIterations;                    //Number of iterations until offline phase
     private CFTree cfTree;                           //CF tree
     private List<ClusterWithMean> macroclusters;     //List of macroclusters
 
+    private Evaluation csv;
+
     public BIRCH(BIRCHParameters params) {
         super(params);
-        int maxNodeEntries = params.getMaxNodeEntries();
-        float distTreshold = params.getDistTreshold();
+        maxNodeEntries = params.getMaxNodeEntries();
+        distTreshold = params.getDistTreshold();
         numClusters = params.getNumClusters();
         cfTree = new CFTree(maxNodeEntries, distTreshold);
         macroclusters = new ArrayList<>();
         macroIterations = 1000;
+
+        csv = new Evaluation("SSQ,centerX,centerY,x,y,originalID,mappedID,assignedID");
     }
 
     @Override
@@ -57,6 +65,8 @@ public class BIRCH extends StandaloneEventProcessorEngine<BIRCHParameters> {
 
     @Override
     public void onEvent(Map<String, Object> in, String s, SpOutputCollector out) {
+        System.out.println("Test");
+
         count++;
 
         double[] x = new double[2];
@@ -64,21 +74,18 @@ public class BIRCH extends StandaloneEventProcessorEngine<BIRCHParameters> {
         x[0] = Double.parseDouble(String.valueOf(in.get(params.getFirstProperty())));
         x[1] = Double.parseDouble(String.valueOf(in.get(params.getSecondProperty())));
 
-        // Read one instace at a time from the dataset
-        // training birch, one instance at a time...
         boolean inserted = cfTree.insertEntry(x);
         if (!inserted) {
             System.err.println("ERROR: NOT INSERTED!");
             System.exit(1);
         }
 
-
-        if ((count % macroIterations) == 0) { //Recalculate macroclusters after a specified amount of iterations
+        if (((count % macroIterations) == 0) && (macroIterations != 0)) {
             calculateMacroclusters(numClusters);
-            System.out.println("Point: "+x[0]+ ", "+x[1]+" Closest MC: "+getClosestMacroclusterId(x));
+            System.out.println("Point: " + x[0] + ", " + x[1] + " Closest MC: " + getClosestMacroclusterId(x));
         }
 
-        in.put("cluster", getClosestMacroclusterId(x));
+        in.put("assignedID", getClosestMacroclusterId(x));
 
         out.onEvent(in);
     }
@@ -90,6 +97,7 @@ public class BIRCH extends StandaloneEventProcessorEngine<BIRCHParameters> {
 
     /**
      * Only for testing
+     *
      * @param in
      */
     public void onEvent(Map<String, Object> in) {
@@ -97,8 +105,8 @@ public class BIRCH extends StandaloneEventProcessorEngine<BIRCHParameters> {
 
         double[] x = new double[2];
 
-        x[0] = Double.parseDouble(String.valueOf(in.get(params.getFirstProperty())));
-        x[1] = Double.parseDouble(String.valueOf(in.get(params.getSecondProperty())));
+        x[0] = Double.parseDouble(in.get("x").toString());
+        x[1] = Double.parseDouble(in.get("y").toString());
 
         // Read one instace at a time from the dataset
         // training birch, one instance at a time...
@@ -109,12 +117,44 @@ public class BIRCH extends StandaloneEventProcessorEngine<BIRCHParameters> {
         }
 
 
-        if ((count % macroIterations) == 0) { //Recalculate macroclusters after a specified amount of iterations
+        if (((count % macroIterations) == 0) && (macroIterations != 0)) { //Recalculate macroclusters after a specified amount of iterations
             calculateMacroclusters(numClusters);
-            System.out.println("Point: "+x[0]+ ", "+x[1]+" Closest MC: "+getClosestMacroclusterId(x));
+            System.out.println("Point: " + x[0] + ", " + x[1] + " Closest MC: " + getClosestMacroclusterId(x));
+            Measurer m = new Measurer();
+            m.getMemoryUsageInMB();
         }
 
-        in.put("cluster", getClosestMacroclusterId(x));
+        in.put("assignedID", getClosestMacroclusterId(x));
+
+        csv.add(in);
+    }
+
+    /**
+     * Only for testing
+     */
+    public void generateCSV(){
+        csv.generateCSV();
+    }
+
+    /**
+     * Only for testing
+     */
+    public void addCenters(){
+        csv.addCenters();
+    }
+
+    /**
+     * Only for testing
+     */
+    public void addSSQ(){
+        csv.addSSQ();
+    }
+
+    /**
+     * Only for testing
+     */
+    public void addIDMapping(){
+        csv.addIDMapping();
     }
 
     public CFTree getCfTree() {
@@ -124,6 +164,7 @@ public class BIRCH extends StandaloneEventProcessorEngine<BIRCHParameters> {
     /**
      * Calculates macrocluster based on current microclusters
      * Is called after a specified amount of iterations
+     *
      * @param k
      */
     private void calculateMacroclusters(int k) {
@@ -141,7 +182,7 @@ public class BIRCH extends StandaloneEventProcessorEngine<BIRCHParameters> {
 
         AlgoKMeans km = new AlgoKMeans();
 
-        if (macroclusters.size()!=0){
+        if (macroclusters.size() != 0) {
             for (ClusterWithMean c : macroclusters)
                 seeds.add(c.getmean());
         }
@@ -151,18 +192,19 @@ public class BIRCH extends StandaloneEventProcessorEngine<BIRCHParameters> {
         int count = 1;
         for (ClusterWithMean c : macroclusters) {
             c.setId(count);
-            count ++;
+            count++;
         }
 
         System.out.println("Macroclusters:");
         for (ClusterWithMean c : macroclusters) {
-            System.out.println(c.getmean().toString()+" ID: "+c.getId());
+            System.out.println(c.getmean().toString() + " ID: " + c.getId());
         }
 
     }
 
     /**
      * Finds id of closest macrocluster
+     *
      * @param x
      * @return id of closest macrocluster
      */
@@ -170,7 +212,7 @@ public class BIRCH extends StandaloneEventProcessorEngine<BIRCHParameters> {
         int id = 0;
         double minDist = Double.MAX_VALUE;
 
-        if (macroclusters!=null) {
+        if (macroclusters != null) {
             for (ClusterWithMean c : macroclusters) {
                 DoubleArray mean = c.getmean();
                 DoubleArray point = new DoubleArray(x);
@@ -187,6 +229,7 @@ public class BIRCH extends StandaloneEventProcessorEngine<BIRCHParameters> {
 
     /**
      * Calculates distance between two data points
+     *
      * @param vector1
      * @param vector2
      * @return distance between two data points

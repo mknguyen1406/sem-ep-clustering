@@ -44,7 +44,7 @@ public enum PeJvmConfig implements PeConfig {
 	public final static String serverUrl;
 	public final static String iconBaseUrl;
 
-	private final static String SERVICE_ID = "pe/org.streampipes.pe.jvm.examples1";
+	private final static String SERVICE_ID = "pe/org.streampipes.pe.jvm.cluster";
 	private final static String SERVICE_NAME = "service_name";
 
 	PeJvmConfig() {

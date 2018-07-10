@@ -11,14 +11,14 @@ public class TestRunDenStream {
 
     public static void main(String[] args) {
 
-        Dataset dataset_object = new Dataset();
-        dataset_object.createDataset(10000);
+        Dataset dataset_object = new Dataset(10000,5,100,20,0.2);
+        dataset_object.createDataset();
         List<Map<String, Object>> dataset_list = dataset_object.getDataset();
 
         float epsilonMicro = 3;
         float epsilonMacro = 30;
         int minPointsMicro = 2;
-        int minPointsMacro = 3;
+        int minPointsMacro = 2;
         float beta = 0.8f;
         float mu = 3;
         float lambda = 0.25f;

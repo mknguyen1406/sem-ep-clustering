@@ -79,7 +79,7 @@ public class DenStream extends StandaloneEventProcessorEngine<DenStreamParameter
         Float x = Float.parseFloat(String.valueOf(in.get(params.getFirstProperty())));
         Float y = Float.parseFloat(String.valueOf(in.get(params.getSecondProperty())));
 
-        DenPoint point = new DenPoint(x,y);
+        DenPoint point = new DenPoint(x, y);
 
         timestamp++;
         point.setTimestamp(timestamp);
@@ -126,7 +126,7 @@ public class DenStream extends StandaloneEventProcessorEngine<DenStreamParameter
 
         if ((count % 1000) == 0) { //Recalculate macroclusters after a specified amount of iterations
             calculateMacroclusters();
-            System.out.println("Point: "+point.toString()+" Closest MC: "+getClosestMacroclusterId(point));
+            System.out.println("Point: " + point.toString() + " Closest MC: " + getClosestMacroclusterId(point));
         }
 
         out.onEvent(in);
@@ -134,6 +134,7 @@ public class DenStream extends StandaloneEventProcessorEngine<DenStreamParameter
 
     /**
      * Only for testing purposes
+     *
      * @param in
      */
     public void onEvent(Map<String, Object> in) {
@@ -142,7 +143,7 @@ public class DenStream extends StandaloneEventProcessorEngine<DenStreamParameter
         float x = Float.parseFloat(in.get("x").toString());
         float y = Float.parseFloat(in.get("y").toString());
 
-        DenPoint point = new DenPoint(x,y);
+        DenPoint point = new DenPoint(x, y);
 
         timestamp++;
         point.setTimestamp(timestamp);
@@ -189,7 +190,7 @@ public class DenStream extends StandaloneEventProcessorEngine<DenStreamParameter
 
         if ((count % 1000) == 0) { //Recalculate macroclusters after a specified amount of iterations
             calculateMacroclusters();
-            System.out.println("Point: "+point.x+", "+ point.y+" Closest MC: "+getClosestMacroclusterId(point));
+            System.out.println("Point: " + point.x + ", " + point.y + " Closest MC: " + getClosestMacroclusterId(point));
         }
 
 
@@ -210,7 +211,7 @@ public class DenStream extends StandaloneEventProcessorEngine<DenStreamParameter
                 point.covered = true;
                 List<Integer> neighbourhood = getNeighbourhoodIDs(point, initBuffer, micro);
                 int minPoints;
-                if (micro){     //Different minPoints for micro and macro clustering
+                if (micro) {     //Different minPoints for micro and macro clustering
                     minPoints = minPointsMicro;
                 } else {
                     minPoints = minPointsMacro;
@@ -246,21 +247,27 @@ public class DenStream extends StandaloneEventProcessorEngine<DenStreamParameter
             mc_centroids.add(mc.getCenter(timestamp, false));
         }
 
-        DBScan(mc_centroids,macro_cluster,false);
+        DBScan(mc_centroids, macro_cluster, false);
 
         int count = 1;
-        if (macro_cluster!=null) {
+        if (macro_cluster.size() > 0) {
             for (MicroCluster mc : macro_cluster) {
                 mc.setId(count);
                 count++;
             }
         }
+
+        System.out.println("Macroclusters:");
+        for (MicroCluster c : macro_cluster) {
+            DenPoint center = c.getCenter(0, false);
+            System.out.println("X: " + center.x + ", Y: " + center.y + ", ID: " + c.getId());
+        }
     }
 
-    public int getClosestMacroclusterId(DenPoint point){
-        int id=0;
+    public int getClosestMacroclusterId(DenPoint point) {
+        int id = 0;
 
-        if (macro_cluster!=null) {
+        if (macro_cluster.size() > 0) {
             MicroCluster nearestMacroCluster = nearestCluster(point, macro_cluster, false);
             return nearestMacroCluster.getId();
         } else {
@@ -275,7 +282,7 @@ public class DenStream extends StandaloneEventProcessorEngine<DenStreamParameter
             if (!testPoint.covered) {
                 float dist = Distance(testPoint, point);
                 float epsilon;
-                if (micro){ //different epsilon for micro and macro clustering
+                if (micro) { //different epsilon for micro and macro clustering
                     epsilon = epsilonMicro;
                 } else {
                     epsilon = epsilonMacro;
@@ -296,7 +303,7 @@ public class DenStream extends StandaloneEventProcessorEngine<DenStreamParameter
                 mc.insert(testPoint, timestamp);
                 List<Integer> neighbourhood2 = getNeighbourhoodIDs(testPoint, initBuffer, micro);
                 int minPoints;
-                if (micro){     //Different minPoints for micro and macro clustering
+                if (micro) {     //Different minPoints for micro and macro clustering
                     minPoints = minPointsMicro;
                 } else {
                     minPoints = minPointsMacro;

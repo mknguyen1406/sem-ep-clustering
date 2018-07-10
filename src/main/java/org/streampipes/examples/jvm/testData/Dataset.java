@@ -1,37 +1,47 @@
 package org.streampipes.examples.jvm.testData;
 
 import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Dataset {
 
+    private int n;  //Amount of records
+    private int k;  //Amount of clusters
+    private double dist;    //Average distance between clusters
+    private double rad; //Average radius of cluster
+    private double tol; //Tolerance factor
     private List<Map<String, Object>> dataset;
 
-    public void createDataset(int n) {
-
+    public Dataset(int n, int k, double dist, double rad, double tol) {
+        this.n = n;
+        this.k = k;
+        this.dist = dist;
+        this.rad = rad;
+        this.tol = tol;
         dataset = new ArrayList<>();
+    }
 
-        for (int i = 0; i < n; i++) {
+    public void createDataset() {
 
-            if (Math.random()<0.5){
-                Map<String, Object> values = new HashMap<String, Object>();
+        double r = Math.random();
 
-                values.put("x", (Double)(Math.random() * 25));
-                values.put("y", (Double)(Math.random() * 25));
+        for (int i = 0; i < k; i++) {
+            int clusterId = i;
+            double[] clusterCenter = new double[2];
 
-                dataset.add(values);
-            } else{
-                Map<String, Object> values = new HashMap<String, Object>();
+            clusterCenter[0] = applyTolerance(dist) * i;
+            clusterCenter[1] = applyTolerance(dist) * i;
 
-                values.put("x", (Double)((Math.random() * 25)+200));
-                values.put("y", (Double)((Math.random() * 25)+200));
-
-                dataset.add(values);
+            for (int j = 0; j < n / k; j++) {
+                Random randomo = new Random();
+                Map<String, Object> record = new HashMap<>();
+                record.put("originalID", clusterId);
+                record.put("x", (randomo.nextGaussian() * applyTolerance(rad) + clusterCenter[0]));
+                record.put("y", (randomo.nextGaussian() * applyTolerance(rad) + clusterCenter[1]));
+                dataset.add(record);
             }
         }
+        Collections.shuffle(dataset);
     }
 
     public List<Map<String, Object>> getDataset() {
@@ -39,4 +49,8 @@ public class Dataset {
     }
 
 
+    private double applyTolerance(double v) {
+        double amp = Math.random() * tol * v * 2 - tol * v;
+        return v + amp;
+    }
 }

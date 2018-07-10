@@ -13,13 +13,13 @@ public class TestRunBIRCH {
 
     public static void main(String[] args) {
 
-        Dataset dataset_object = new Dataset();
-        dataset_object.createDataset(10000);
+        Dataset dataset_object = new Dataset(10000,5,100,20,0.2);
+        dataset_object.createDataset();
         List<Map<String, Object>> dataset_list = dataset_object.getDataset();
 
         int maxNodeEntries = 3;
-        float distTreshold = 5;
-        int numClusters = 2;
+        float distTreshold = 10;
+        int numClusters = 5;
         int memoryLimit = 1000; // in MB
         int memoryLimitPeriodicCheck = 10000;  // verify memory usage after every 10000 inserted instances
         String firstProperty = "x";
@@ -40,6 +40,11 @@ public class TestRunBIRCH {
             Map<String, Object> value = dataset_list.get(i);
             birchObject.onEvent(value);
         }
+
+        birchObject.addCenters();
+        birchObject.addSSQ();
+        birchObject.addIDMapping();
+        birchObject.generateCSV();
     }
 
 }

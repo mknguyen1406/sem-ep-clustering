@@ -11,7 +11,7 @@ import org.streampipes.examples.jvm.processor.birch.KMeans.input.DoubleArray;
 /**
  * An implementation of the K-means algorithm (J. MacQueen, 1967).
  * <br/><br/>
- *
+ * <p>
  * The K-means  algorithm steps are (text from Wikipedia) : 1) Choose the number of clusters, k.
  * * 2) Randomly generate k clusters and determine the cluster centers, or directly
  * generate k random points as cluster centers. 3) Assign each point to the
@@ -43,15 +43,16 @@ public class AlgoKMeans {
 
     /**
      * Run the K-Means algorithm
+     *
      * @param instances an input file containing a list of vectors of double values
-     * @param k the parameter
+     * @param k         the parameter
      * @return a list of clusters (some of them may be empty)
      */
-    public List<ClusterWithMean> runAlgorithm(List<DoubleArray> instances, int k, List<DoubleArray> seeds)  {
+    public List<ClusterWithMean> runAlgorithm(List<DoubleArray> instances, int k, List<DoubleArray> seeds) {
         // record the start time
-        startTimestamp =  System.currentTimeMillis();
+        startTimestamp = System.currentTimeMillis();
         // reset the number of iterations
-        iterationCount =0;
+        iterationCount = 0;
 
         // variables to store the minimum and maximum values in vectors
         double minValue = Integer.MAX_VALUE;
@@ -59,12 +60,12 @@ public class AlgoKMeans {
 
 
         // For each instance
-        for(DoubleArray instance : instances){
-            for(double value : instance.data){
-                if(value < minValue){
+        for (DoubleArray instance : instances) {
+            for (double value : instance.data) {
+                if (value < minValue) {
                     minValue = value;
                 }
-                if(value > maxValue){
+                if (value > maxValue) {
                     maxValue = value;
                 }
             }
@@ -74,11 +75,11 @@ public class AlgoKMeans {
         int vectorsSize = instances.get(0).data.length;
 
         // if the user ask for only one cluster!
-        if(k == 1) {
+        if (k == 1) {
             // Create a single cluster and return it
             clusters = new ArrayList<ClusterWithMean>();
             ClusterWithMean cluster = new ClusterWithMean(vectorsSize);
-            for(DoubleArray vector : instances) {
+            for (DoubleArray vector : instances) {
                 cluster.addVector(vector);
             }
             cluster.setMean(new DoubleArray(new double[vectorsSize]));
@@ -86,7 +87,7 @@ public class AlgoKMeans {
             clusters.add(cluster);
 
             // record end time
-            endTimestamp =  System.currentTimeMillis();
+            endTimestamp = System.currentTimeMillis();
             return clusters;
         }
 
@@ -97,18 +98,17 @@ public class AlgoKMeans {
             DoubleArray vector = instances.get(0);
             ClusterWithMean cluster = new ClusterWithMean(vectorsSize);
             cluster.addVector(vector);
-            cluster.recomputeClusterMean();
-            cluster.setMean(new DoubleArray(new double[vectorsSize]));
+            cluster.setMean(vector);
             clusters.add(cluster);
 
             // record end time
-            endTimestamp =  System.currentTimeMillis();
+            endTimestamp = System.currentTimeMillis();
             return clusters;
         }
 
         // if the user asks for more cluster then there is data,
         // we set k to the number of data points.
-        if(k > instances.size()) {
+        if (k > instances.size()) {
             k = instances.size();
         }
 
@@ -117,7 +117,7 @@ public class AlgoKMeans {
                 vectorsSize, seeds);
 
         // record end time
-        endTimestamp =  System.currentTimeMillis();
+        endTimestamp = System.currentTimeMillis();
 
         // return the clusters
         return clusters;
@@ -125,11 +125,12 @@ public class AlgoKMeans {
 
     /**
      * Apply the K-means algorithm
-     * @param k the parameter k
-     * @param vectors the list of initial vectors
-     * @param minValue the min value
-     * @param maxValue the max value
-     * @param vectorsSize  the vector size
+     *
+     * @param k           the parameter k
+     * @param vectors     the list of initial vectors
+     * @param minValue    the min value
+     * @param maxValue    the max value
+     * @param vectorsSize the vector size
      */
     void applyAlgorithm(int k,
                         List<DoubleArray> vectors, double minValue, double maxValue,
@@ -140,11 +141,12 @@ public class AlgoKMeans {
 
     /**
      * Apply the K-means algorithm
-     * @param k the parameter
-     * @param vectors the list of initial vectors
-     * @param minValue the min value
-     * @param maxValue the max value
-     * @param vectorsSize  the vector size
+     *
+     * @param k           the parameter
+     * @param vectors     the list of initial vectors
+     * @param minValue    the min value
+     * @param maxValue    the max value
+     * @param vectorsSize the vector size
      */
     List<ClusterWithMean> applyKMeans(int k,
                                       List<DoubleArray> vectors, double minValue, double maxValue,
@@ -162,7 +164,7 @@ public class AlgoKMeans {
         }
 
 
-        if (seeds.size()!=0 && seeds.size()==k) {
+        if (seeds.size() != 0 && seeds.size() == k) {
             // (1.a) Generate k empty clusters with macrocluster center as seeds
             for (int i = 0; i < k; i++) {
                 ClusterWithMean cluster = new ClusterWithMean(vectorsSize);
@@ -170,35 +172,40 @@ public class AlgoKMeans {
                 newClusters.add(cluster);
             }
         } else {
-            // (1.b) Randomly generate k empty clusters with a random mean (cluster
-            // center)
+            // (1.b) Generate k clusters according to adjusted k-Means++
+
             for (int i = 0; i < k; i++) {
                 //DoubleArray meanVector = generateRandomVector(minValue, maxValue, vectorsSize);
                 ClusterWithMean cluster = new ClusterWithMean(vectorsSize);
 
-                if (i==0) {
+                if (i == 0) {
                     DoubleArray meanVector = vectors.get(0);
                     cluster.setMean(meanVector);
+                    cluster.addVector(meanVector);
                     newClusters.add(cluster);
                 } else {
 
                     double maxDistance = 0;
                     DoubleArray farestPoint = vectors.get(1);
 
-                    for (int j = i;j<vectors.size();j++) {
+                    for (int j = i; j < vectors.size(); j++) {
                         DoubleArray p = vectors.get(j);
 
-                        for (ClusterWithMean c:newClusters) {
+                        double d = 0;
+                        for (ClusterWithMean c : newClusters) {
                             DoubleArray center = c.getmean();
-                            double d = calculateDistance(center, p);
-                            if (d > maxDistance) {
-                                maxDistance = d;
-                                farestPoint = p;
-                            }
+                            d += calculateDistance(center, p);
+                        }
+
+                        d = d/newClusters.size();
+                        if (d > maxDistance) {
+                            maxDistance = d;
+                            farestPoint = p;
                         }
                     }
 
                     cluster.setMean(farestPoint);
+                    cluster.addVector(farestPoint);
                     newClusters.add(cluster);
                 }
             }
@@ -206,7 +213,7 @@ public class AlgoKMeans {
 
         // (2) Repeat the two next steps until the assignment hasn't changed
         boolean changed;
-        while(true) {
+        while (true) {
             iterationCount++;
             changed = false;
             // (2.1) Assign each point to the nearest cluster center.
@@ -243,12 +250,14 @@ public class AlgoKMeans {
                         containingCluster.remove(vector);
                     }
                     // add the vector to the nearest cluster
-                    nearestCluster.addVector(vector);
+                    if (nearestCluster != null) {
+                        nearestCluster.addVector(vector);
+                    }
                     changed = true;
                 }
             }
 
-            if(!changed){     // exit condition for main loop
+            if (!changed) {     // exit condition for main loop
                 break;
             }
 
@@ -263,8 +272,9 @@ public class AlgoKMeans {
 
     /**
      * Generate a random vector.
-     * @param minValue  the minimum value allowed
-     * @param maxValue  the maximum value allowed
+     *
+     * @param minValue    the minimum value allowed
+     * @param maxValue    the maximum value allowed
      * @param vectorsSize the desired vector size
      * @return the random vector
      */
@@ -273,7 +283,7 @@ public class AlgoKMeans {
         // create a new vector
         double[] vector = new double[vectorsSize];
         // for each position generate a random number
-        for(int i=0; i < vectorsSize; i++){
+        for (int i = 0; i < vectorsSize; i++) {
             vector[i] = (random.nextDouble() * (maxValue - minValue)) + minValue;
         }
         // return the vector
@@ -281,8 +291,8 @@ public class AlgoKMeans {
     }
 
     double calculateDistance(DoubleArray vector1, DoubleArray vector2) {
-        double sum =0;
-        for(int i=0; i< vector1.data.length; i++){
+        double sum = 0;
+        for (int i = 0; i < vector1.data.length; i++) {
             sum += Math.pow(vector1.data[i] - vector2.data[i], 2);
         }
         return Math.sqrt(sum);
